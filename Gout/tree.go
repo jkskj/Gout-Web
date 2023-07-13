@@ -11,11 +11,12 @@ type methodTree struct {
 
 type methodTrees []methodTree
 type node struct {
-	fullPart  string  // 完整路由
-	part      string  // 路由中的一部分
-	children  []*node // 子节点
-	wildChild bool    // 判断子节点有通配符节点
-	isWild    bool    // 判断当前节点是否为通配符节点
+	fullPart  string        // 完整路由
+	handlers  HandlersChain //处理函数
+	part      string        // 路由中的一部分
+	children  []*node       // 子节点
+	wildChild bool          // 判断子节点有通配符节点
+	isWild    bool          // 判断当前节点是否为通配符节点
 }
 
 // 匹配节点
@@ -40,9 +41,10 @@ func (n *node) matchChildren(part string) []*node {
 }
 
 // 插入节点
-func (n *node) insert(path string, parts []string, height int) {
+func (n *node) insert(path string, parts []string, height int, handlers HandlersChain) {
 	if len(parts) == height {
 		n.fullPart = path
+		n.handlers = handlers
 		return
 	}
 
@@ -56,7 +58,7 @@ func (n *node) insert(path string, parts []string, height int) {
 		n.children = append(n.children, child)
 	}
 
-	child.insert(path, parts, height+1)
+	child.insert(path, parts, height+1, handlers)
 }
 
 // 更新 node 的 children 字段

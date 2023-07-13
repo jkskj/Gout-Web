@@ -6,14 +6,12 @@ import (
 )
 
 type router struct {
-	roots    map[string]*node
-	handlers map[string]HandlersChain
+	roots map[string]*node
 }
 
 func newRouter() *router {
 	return &router{
-		roots:    make(map[string]*node),
-		handlers: make(map[string]HandlersChain),
+		roots: make(map[string]*node),
 	}
 }
 
@@ -36,14 +34,11 @@ func parsePath(path string) []string {
 // 添加路由
 func (r *router) addRoute(method string, path string, handlers HandlersChain) {
 	parts := parsePath(path)
-
-	key := method + "-" + path
 	_, ok := r.roots[method]
 	if !ok {
 		r.roots[method] = &node{}
 	}
-	r.roots[method].insert(path, parts, 0)
-	r.handlers[key] = handlers
+	r.roots[method].insert(path, parts, 0, handlers)
 }
 
 // 获得路由
@@ -79,9 +74,8 @@ func (r *router) HTTPRequest(c *Context) {
 	n, params := r.getRoute(c.Method, c.Path)
 
 	if n != nil {
-		key := c.Method + "-" + n.fullPart
 		c.Params = params
-		c.handlers = r.handlers[key]
+		c.handlers = n.handlers
 	} else {
 		c.handlers = append(c.handlers, func(c *Context) {
 			c.String(http.StatusNotFound, "404 NOT FOUND: %s\n", c.Path)
